@@ -7,6 +7,8 @@ int main(int argc, char** argv)
 {
 	tools_memory_init();
 
+	int w = 0;
+
 	int** tab = NULL;
  	tab = tools_malloc(sizeof(int*) * 3);//y
 	int i, j;

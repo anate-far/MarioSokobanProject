@@ -22,7 +22,7 @@ struct _player{
 	int rotation;
 };
 
-player player_create(SDL_Renderer* renderer, char* img_name, int start_position_x, int start_position_y);
+player player_create(SDL_Renderer* renderer, int start_position_x, int start_position_y);
 void player_destroy(player j);
 
 void player_display(SDL_Renderer* renderer, player j);

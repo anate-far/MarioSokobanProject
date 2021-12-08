@@ -8,7 +8,7 @@
 #include "player.h"
 #include "map.h"
 
-player player_create(SDL_Renderer* renderer, char* name_img, int start_position_x, int start_position_y)
+player player_create(SDL_Renderer* renderer, int start_position_x, int start_position_y)
 {
 	player j = tools_malloc(sizeof(struct _player));
 	j->texture = tools_malloc(sizeof(SDL_Texture*) * 4);

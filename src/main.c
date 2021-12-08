@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 	SDL_Window* window = NULL;
 	SDL_Renderer* renderer = NULL;
 	SDL_bool window_is_open = SDL_TRUE;	
-	char * name = "img/mario_bas.gif";	
+	//char * name = "img/mario_bas.gif";	
 
 
 	if(SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 	if (SDL_CreateWindowAndRenderer( SIZE_WINDOW_H, SIZE_WINDOW_W, 0, &window, &renderer))
 			clearRessources("Impossible de creer une fenetre et un rendu", NULL,NULL,NULL);	
 
-	player mario = player_create(renderer, "img/mario_bas.gif", 170, 204);
+	player mario = player_create(renderer, 170, 204);
 	map level = map_init(renderer);
 
 
@@ -41,7 +41,8 @@ int main(int argc, char** argv)
 			switch(event.type)
 			{
 				case SDL_QUIT:
-					window_is_open = SDL_FALSE; 
+					window_is_open = SDL_FALSE;
+					break;
 					
 
 				case SDL_KEYDOWN:

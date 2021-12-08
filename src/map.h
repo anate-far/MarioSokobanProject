@@ -12,11 +12,14 @@ typedef struct _map* map;
 struct _map{
 	int** block;
 	SDL_Texture* wall_block;
-	SDL_Texture* box_block; 
+	SDL_Texture* objective_block; 
 	SDL_Rect wall_position; 
-	SDL_Rect box_position;
+	SDL_Rect objective_position;
 	char* name_map;
 	int nb_block; 
+};
+struct _box{
+
 };
 
 map map_init(SDL_Renderer* renderer);

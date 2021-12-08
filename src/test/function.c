@@ -85,18 +85,5 @@ int read_block_value(int nb_caracter)
 	return result; 
 }
 
-void set_block()
-{
-	int block = 0, x = 0, y = 0;
 
-	if(block == 1)
-	{
-	
-	}
-}
-
-void create_block(SDL_Renderer* renderer)
-{
-	
-}
 
