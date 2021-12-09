@@ -7,6 +7,7 @@
 #include "tools.h"
 #include "player.h"
 #include "map.h"
+#include "box.h"
 
 player player_create(SDL_Renderer* renderer, int start_position_x, int start_position_y)
 {
@@ -46,23 +47,51 @@ void player_display(SDL_Renderer* renderer, player j)
 
 void player_move(player j, int direction, map m)
 {
+	int i, v;
 	if(direction == DOWN)
 	{	
 		j->rotation = 0;
 		SDL_QueryTexture(j->texture[0], NULL, NULL, &j->position.w, &j->position.h);
 	
 		if(m->block[(j->position.y + j->speed) / 34][j->position.x / 34] == 1)
-			j->position. y += 0;
-		else if(m->block[(j->position.y + j->speed) / 34][j->position.x / 34] == 2)
-		{
-			m->block[(j->position.y + j->speed) / 34][j->position.x / 34] = 0;
-			debug(m);
-			m->block[(j->position.y + (j->speed * 2)) / 34][j->position.x / 34] = 2;
-			j->position. y += j->speed;		
-		}
-		else		
+			j->position. y += 0;	
+	
+		else	
 			j->position.y += j->speed;
-	}
+		
+		/*for(i = 0; i < m->nb_box; i ++)
+		{	
+			if((j->position.y + j->speed) == (m->tab_box[i]->position.y  + j->speed))
+			{
+				m->tab_box[i]->position.y += j->speed;
+			}
+		}*/
+
+		for(i = 0; i < m->nb_box; i ++)
+		{
+			for(v = i; v < m->nb_box; v ++)
+			{
+				if(m->tab_box[i]->position.y + j->speed == m->tab_box[v]->position.y)
+				{
+						m->tab_box[i]->position. y += 0;	
+						j->position. y = 0;
+
+				}
+				/*else if(m->block[(m->tab_box[i]->position.y + j->speed) / 34][m->tab_box[i]->position.x / 34] == 1)
+				{
+						m->tab_box[i]->position. y += 0;	
+						j->position. y = 0;
+				}*/
+
+				else if((j->position.y + j->speed) == (m->tab_box[i]->position.y  + j->speed))
+				{
+					m->tab_box[i]->position.y += j->speed;
+				}
+
+			}
+		}	
+	}	
+	
 	if(direction == UP)
 	{
 		j->rotation = 1;
@@ -96,6 +125,7 @@ void player_move(player j, int direction, map m)
 	}
 
 }
+
 
 void player_create_texture(SDL_Renderer* renderer, player j)
 {

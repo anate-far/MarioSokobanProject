@@ -7,6 +7,7 @@
 #include "tools.h"
 #include "player.h"
 #include "map.h"
+#include "box.h"
 
 map map_init(SDL_Renderer* renderer)
 {
@@ -41,9 +42,15 @@ map map_init(SDL_Renderer* renderer)
 	int size = str_len("level1.txt");
 	m->name_map = tools_malloc(sizeof(char) * size);
 	str_copy(m->name_map,"level1.txt"); 
-		
-
+	
+	map_read_level(m);	
+	
 	m->nb_block = NB_BLOCK_W * NB_BLOCK_H; 
+
+	number_of_box(m);
+	init_box(renderer, m);	
+
+	box_pos_init(m);
 
 	return m;
 }
@@ -62,12 +69,15 @@ void map_destroy(map m)
 	int size = str_len("level1.txt");
 	tools_free(m->name_map, sizeof(char) * size);
 
+	for(i = 0; i < m->nb_box; i++)
+		box_destroy(m->tab_box[i]);
+	tools_free(m->tab_box, sizeof(box) * m->nb_box);
+
 	tools_free(m, sizeof(struct _map));
 }
 
 void map_create(SDL_Renderer* renderer, map m)
-{
-	map_read_level(m);
+{	
 	map_set_block(renderer, m);
 
 }
@@ -137,7 +147,10 @@ void map_set_block(SDL_Renderer* renderer, map m)
 				case 1:
 					SDL_RenderCopy(renderer, m->wall_block, NULL, &m->wall_position);
 					break;
-				case 2:
+				//case 2: 
+					//box_init_position( x * SIZE_BLOCK_H, y * SIZE_BLOCK_W);
+
+				case 3:
 					SDL_RenderCopy(renderer, m->objective_block, NULL, &m->objective_position);
 					break;
 
@@ -179,4 +192,66 @@ SDL_Rect map_init_rect(SDL_Rect rect)
 }
 
 
+void box_pos_init(map m)
+{
+	int x, y;
+	int i = 0;
+
+	for(y = 0; y < NB_BLOCK_W; y ++)
+	{
+		for(x = 0; x < NB_BLOCK_H; x ++)
+		{	
+			if(m->block[y][x] == 2)
+			{
+				
+				m->tab_box[i]->position.x = x * SIZE_BLOCK_H;
+				m->tab_box[i]->position.y = y * SIZE_BLOCK_W;
+				i ++;
+			}
+
+
+		}	
+	}
+}
+
+void number_of_box(map m)
+{
+	int result = 0;
+	int x, y;
+	
+	for(y = 0; y < NB_BLOCK_W; y ++)
+	{
+		for(x = 0; x < NB_BLOCK_H; x ++)
+		{	
+			if(m->block[y][x] == 2)
+			{
+				result ++; 
+			}
+
+
+		}	
+	}
+
+
+	m->nb_box = result;
+}
+
+
+void init_box(SDL_Renderer* renderer, map m)
+{
+	int i;
+	m->tab_box = tools_malloc(sizeof(box) * m->nb_box);
+
+	for(i = 0; i < m->nb_box; i++)
+		m->tab_box[i] = box_create(renderer);
+
+}
+
+
+void map_box_display(SDL_Renderer* renderer, map m)
+{
+	int i;
+	for(i = 0; i < m->nb_box; i ++)
+		box_display(renderer, m->tab_box[i]);
+}
 

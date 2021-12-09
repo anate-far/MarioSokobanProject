@@ -7,6 +7,7 @@
 #include "tools.h"
 #include "player.h"
 #include "map.h"
+#include "box.h"
 
 #define SIZE_WINDOW_W SIZE_BLOCK_W * NB_BLOCK_W
 #define SIZE_WINDOW_H SIZE_BLOCK_H * NB_BLOCK_H
@@ -18,8 +19,6 @@ int main(int argc, char** argv)
 	SDL_Window* window = NULL;
 	SDL_Renderer* renderer = NULL;
 	SDL_bool window_is_open = SDL_TRUE;	
-	//char * name = "img/mario_bas.gif";	
-
 
 	if(SDL_Init(SDL_INIT_VIDEO) != 0)
 		clearRessources("Impossible de charger la sdl", NULL,NULL, NULL); 
@@ -27,9 +26,8 @@ int main(int argc, char** argv)
 	if (SDL_CreateWindowAndRenderer( SIZE_WINDOW_H, SIZE_WINDOW_W, 0, &window, &renderer))
 			clearRessources("Impossible de creer une fenetre et un rendu", NULL,NULL,NULL);	
 
-	player mario = player_create(renderer, 170, 204);
+	player mario = player_create(renderer, 170, 204);	
 	map level = map_init(renderer);
-
 
 	while(window_is_open)
 	{
@@ -80,14 +78,14 @@ int main(int argc, char** argv)
 			
 		}
 
-		//player_colision(mario, level);
-		
+			
 		if(SDL_RenderClear(renderer) != 0)
 		       clearRessources("Impossible de clear le rendu", window, renderer, NULL); 
 				
 	
 		map_create(renderer, level);	
-		player_display(renderer, mario),	
+		map_box_display(renderer, level);
+		player_display(renderer, mario);
 
 		SDL_RenderPresent(renderer); 
 	}

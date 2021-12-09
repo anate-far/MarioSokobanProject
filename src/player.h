@@ -7,6 +7,7 @@
 #include <SDL_image.h>
 
 #include "map.h"
+#include "box.h"
 
 #define SIZE_PLAYER_W 34
 #define SIZE_PLAYER_H 34

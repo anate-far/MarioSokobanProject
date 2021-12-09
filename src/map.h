@@ -6,6 +6,8 @@
 #define NB_BLOCK_W 12//y
 #define NB_BLOCK_H 12//x
 
+#include "box.h"
+
 enum{VOID_BLOCK, WALL_BLOCK, BOX, CHECK, PLAYER};
 
 typedef struct _map* map;
@@ -17,9 +19,8 @@ struct _map{
 	SDL_Rect objective_position;
 	char* name_map;
 	int nb_block; 
-};
-struct _box{
-
+	int nb_box;	
+	box* tab_box;
 };
 
 map map_init(SDL_Renderer* renderer);
@@ -32,6 +33,11 @@ void map_set_block(SDL_Renderer* renderer, map m);
 void block_display(SDL_Renderer* renderer, map m);
 SDL_Texture* map_create_texture(SDL_Renderer* renderer, char* name_img);
 SDL_Rect map_init_rect(SDL_Rect rect);
+
+void box_pos_init(map m);
+void number_of_box(map m);
+void init_box(SDL_Renderer* renderer, map m);
+void map_box_display(SDL_Renderer* renderer, map m);
 
 
 
