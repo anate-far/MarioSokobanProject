@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 				
 	
 		map_create(renderer, level);	
-		map_box_display(renderer, level);
+		//map_display(renderer, level);
 		player_display(renderer, mario);
 
 		SDL_RenderPresent(renderer); 

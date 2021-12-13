@@ -37,7 +37,7 @@ SDL_Rect map_init_rect(SDL_Rect rect);
 void box_pos_init(map m);
 void number_of_box(map m);
 void init_box(SDL_Renderer* renderer, map m);
-void map_box_display(SDL_Renderer* renderer, map m);
+
 
 
 

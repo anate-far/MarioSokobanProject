@@ -30,6 +30,8 @@ void player_display(SDL_Renderer* renderer, player j);
 void player_move(player j, int direction, map m);
 void player_create_texture(SDL_Renderer* renderer, player j);
 
+int check_box_colision(player j,map m);
+
 
 
 #endif

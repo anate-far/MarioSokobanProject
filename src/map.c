@@ -147,8 +147,6 @@ void map_set_block(SDL_Renderer* renderer, map m)
 				case 1:
 					SDL_RenderCopy(renderer, m->wall_block, NULL, &m->wall_position);
 					break;
-				//case 2: 
-					//box_init_position( x * SIZE_BLOCK_H, y * SIZE_BLOCK_W);
 
 				case 3:
 					SDL_RenderCopy(renderer, m->objective_block, NULL, &m->objective_position);
@@ -156,6 +154,12 @@ void map_set_block(SDL_Renderer* renderer, map m)
 
 			}	
 		}	
+	}
+
+	int i;
+	for(i = 0; i < m->nb_box; i++)
+	{
+		box_display(renderer, m->tab_box[i]);
 	}
 
 }
@@ -248,10 +252,4 @@ void init_box(SDL_Renderer* renderer, map m)
 }
 
 
-void map_box_display(SDL_Renderer* renderer, map m)
-{
-	int i;
-	for(i = 0; i < m->nb_box; i ++)
-		box_display(renderer, m->tab_box[i]);
-}
 
