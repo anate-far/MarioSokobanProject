@@ -1,37 +1,30 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <SDL.h>
-#include <SDL_image.h>
-
 #include "map.h"
-#include "box.h"
 
-#define SIZE_PLAYER_W 34
-#define SIZE_PLAYER_H 34
-
-
-enum{UP, DOWN, LEFT, RIGHT,NEUTRAL};
-
-typedef struct _player* player;
-struct _player{
-	SDL_Texture** texture;
-	SDL_Rect position;
+typedef struct{
+	SDL_Texture* up_texture;
+	SDL_Texture* down_texture;
+	SDL_Texture* left_texture;
+	SDL_Texture* right_texture;
+	SDL_Texture* display_texture;
+	SDL_Rect pos_player;
 	int speed;
-	int rotation;
-};
+}Player;
 
-player player_create(SDL_Renderer* renderer, int start_position_x, int start_position_y);
-void player_destroy(player j);
+//constructor and destructor
+Player* player_init(SDL_Renderer* renderer, Grid* grid);
+void player_destroy(Player* player);
 
-void player_display(SDL_Renderer* renderer, player j);
-void player_move(player j, int direction, map m);
-void player_create_texture(SDL_Renderer* renderer, player j);
+//display
+void player_display(SDL_Renderer* renderer, Player* player);
 
-int check_box_colision(player j,map m);
+//player collision object
+void player_box_colision(Player* player, Grid* grid, int speed_x, int speed_y);
 
+//movement
+void player_move(SDL_Renderer* renderer, Player* player, Grid* grid, int towards);
 
 
 #endif

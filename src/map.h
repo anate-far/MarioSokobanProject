@@ -1,44 +1,56 @@
 #ifndef MAP_H
 #define MAP_H
 
-#define SIZE_BLOCK_W 34
-#define SIZE_BLOCK_H 34
-#define NB_BLOCK_W 12//y
-#define NB_BLOCK_H 12//x
+//ERROR = -3
 
-#include "box.h"
+//for tab_2d in map
+typedef struct {
 
-enum{VOID_BLOCK, WALL_BLOCK, BOX, CHECK, PLAYER};
+	//array 2D
+	int* tab_2d;
+	int width, height, size_tab_2d;
+	int nb_objective;
+	int nb_complete_objective;
 
-typedef struct _map* map;
-struct _map{
-	int** block;
-	SDL_Texture* wall_block;
-	SDL_Texture* objective_block; 
-	SDL_Rect wall_position; 
-	SDL_Rect objective_position;
-	char* name_map;
-	int nb_block; 
-	int nb_box;	
-	box* tab_box;
-};
+}Grid;
 
-map map_init(SDL_Renderer* renderer);
-void map_destroy(map m);
-void map_create(SDL_Renderer* renderer, map m);
-void debug(map m);
-void map_set_block_init(map m);
-void map_read_level(map m);
-void map_set_block(SDL_Renderer* renderer, map m);
-void block_display(SDL_Renderer* renderer, map m);
-SDL_Texture* map_create_texture(SDL_Renderer* renderer, char* name_img);
-SDL_Rect map_init_rect(SDL_Rect rect);
+typedef struct{
+	SDL_Texture* wall_texture;
+	SDL_Texture* box_texture;
+	SDL_Texture* objective_texture;
+	SDL_Texture* complete_texture;
+	SDL_Rect pos_texture;
+}Map_texture;
 
-void box_pos_init(map m);
-void number_of_box(map m);
-void init_box(SDL_Renderer* renderer, map m);
+//Constructor and destructor
+//grid
+Grid* grid_tab_2d_init(int _width, int _height);
+void grid_tab_2d_destroy(Grid* grid);	
+//texture
+Map_texture* map_texture_init(SDL_Renderer* renderer);
+void map_texture_destroy(Map_texture* map_texure);
 
 
+//debug
+void grid_debug(Grid* grid);
+void map_texture_debug(SDL_Renderer* renderer, Map_texture* map_texure);
 
+//converted
+int tab_converted_x_y_to_index(int x, int y, int size_x);
+
+//manage value
+void grid_set_value(Grid* grid, int index, int value);
+void grid_set_value_x_y(Grid* grid, int index_x, int index_y, int value);
+int grid_get_value(Grid* grid, int index);
+int grid_get_value_x_y(Grid* grid, int index_x, int index_y);
+//return index of value
+int search_value(Grid* grid, int value);
+void search_value_x_y(Grid* grid, int* index_x, int* index_y, int value);
+
+//manage file level
+void read_level(Grid* grid, const char* name_level);
+
+//display
+void display_map(SDL_Renderer* renderer, Grid* grid, Map_texture* map_texture);
 
 #endif

@@ -1,106 +1,73 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <SDL.h>
 #include <SDL_image.h>
 
-#include "toolSDL.h"
-#include "tools.h"
-#include "player.h"
+#include "constante.h"
+#include "tools_sdl.h"
+#include "input.h"
 #include "map.h"
-#include "box.h"
+#include "player.h"
+#include "play.h"
 
-#define SIZE_WINDOW_W SIZE_BLOCK_W * NB_BLOCK_W
-#define SIZE_WINDOW_H SIZE_BLOCK_H * NB_BLOCK_H
-
-int main(int argc, char** argv)
+int main(void)
 {
-	tools_memory_init();
-
+	//Variable
 	SDL_Window* window = NULL;
 	SDL_Renderer* renderer = NULL;
-	SDL_bool window_is_open = SDL_TRUE;	
+	input_keys in;
 
-	if(SDL_Init(SDL_INIT_VIDEO) != 0)
-		clearRessources("Impossible de charger la sdl", NULL,NULL, NULL); 
+	//init SDL
+	SDL_Init(SDL_INIT_VIDEO);
+	//init input key
+	input_key_init(&in);
 
-	if (SDL_CreateWindowAndRenderer( SIZE_WINDOW_H, SIZE_WINDOW_W, 0, &window, &renderer))
-			clearRessources("Impossible de creer une fenetre et un rendu", NULL,NULL,NULL);	
+	//init window and renderer
+	if(SDL_CreateWindowAndRenderer(SIZE_WINDOW_W, SIZE_WINDOW_H,0, &window, &renderer) != 0)
+		fprintf(stderr, "Impossible de creer la fenetre et le rendu\n");
+	
+	//init map
+	Grid* grid = grid_tab_2d_init(SIZE_MAP_W, SIZE_MAP_H);
+	Map_texture* map_texture = map_texture_init(renderer);
+	read_level(grid, "../level/level_test.txt");
 
-	player mario = player_create(renderer, 170, 204);	
-	map level = map_init(renderer);
-
-	while(window_is_open)
+	//init player
+	Player* player = player_init(renderer, grid);
+	
+	while(in.window_is_open)
 	{
-	
-		
-		SDL_Event event;
-		while(SDL_PollEvent(&event))
+		//check is wone
+		if(is_wone(grid) == 1)
 		{
-			switch(event.type)
-			{
-				case SDL_QUIT:
-					window_is_open = SDL_FALSE;
-					break;
-					
-
-				case SDL_KEYDOWN:
-					switch(event.key.keysym.sym)
-					{
-						case SDLK_ESCAPE:
-							window_is_open = SDL_FALSE; 
-							break;
-
-						case SDLK_DOWN:
-							player_move(mario, DOWN, level);
-							break;
-						case SDLK_UP:
-							player_move(mario, UP, level);
-							break;
-						case SDLK_RIGHT:
-							player_move(mario, RIGHT, level);
-							break;
-						case SDLK_LEFT:
-							player_move(mario, LEFT, level);
-							break;
-
-
-						default:
-							continue;		
-					}
-					break;
-	
-
-				default:
-					player_move(mario, NEUTRAL, level);
-					break; 
-			}
-
-			
+			fprintf(stderr, "##### YOU WIN #####\n");
+			SDL_Delay(1000);
+			SDL_Quit();
+			return EXIT_SUCCESS;
 		}
 
-			
-		if(SDL_RenderClear(renderer) != 0)
-		       clearRessources("Impossible de clear le rendu", window, renderer, NULL); 
-				
+		//input
+		update_event(renderer, &in, player, grid);
+		
+		// display map
+		display_map(renderer, grid, map_texture);
 	
-		map_create(renderer, level);	
-		//map_display(renderer, level);
-		player_display(renderer, mario);
+		// display player
+		player_display(renderer, player);
 
-		SDL_RenderPresent(renderer); 
+
+		SDL_RenderPresent(renderer);
 	}
 
+	//destroy player
+	player_destroy(player);
 
+	//destroy map
+	map_texture_destroy(map_texture);
+	grid_tab_2d_destroy(grid);
 
-	
+	//destroy sdl
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
 
-		player_destroy(mario);
-		map_destroy(level);
-
-		clearRessources(NULL, window, renderer, NULL); 
-
-		tools_check_at_end_of_app();
-	 
-
-	return EXIT_SUCCESS; 
+	return EXIT_SUCCESS;
 }

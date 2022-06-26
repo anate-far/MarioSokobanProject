@@ -1,255 +1,284 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <SDL.h>
 #include <SDL_image.h>
 
-#include "toolSDL.h"
-#include "tools.h"
-#include "player.h"
 #include "map.h"
-#include "box.h"
+#include "constante.h"
+#include "tools_sdl.h"
 
-map map_init(SDL_Renderer* renderer)
+
+//Constructor and destructor
+//grid
+Grid* grid_tab_2d_init(int _width, int _height)
 {
-	map m = tools_malloc(sizeof(struct _map));
-	int i, j;
+	Grid* grid = malloc(sizeof(Grid));
+
+	//init size value
+	grid->width = _width;
+	grid->height = _height;
+	grid->size_tab_2d = _width * _height;
+
+	//init tab_2d_array
+	grid->tab_2d = malloc(sizeof(int) * grid->size_tab_2d);
+	//init value
+	for(int i = 0; i < grid->size_tab_2d; i++)
+		grid->tab_2d[i] = 0;
+
+	//init objectiv
+	grid->nb_objective = 0;
+	grid->nb_complete_objective = 0;
+
+	return grid;
+}
+
+void grid_tab_2d_destroy(Grid* grid)
+{
+	if(grid == NULL)
+		return;
 	
-	m->block = tools_malloc(sizeof(int*) * NB_BLOCK_W);
-	for(i = 0; i < NB_BLOCK_W; i++)
-		m->block[i] = tools_malloc(sizeof(int) * NB_BLOCK_H);	
+	//destroy tab_2d_array
+	free(grid->tab_2d);
 
-	for(i = 0; i < NB_BLOCK_W; i++)
-	{
-		for(j = 0; j < NB_BLOCK_H; j++)
-			m->block[i][j] = 0; 
-	}
-
-	m->wall_block = map_create_texture(renderer, "img/mur.jpg");
-	m->objective_block = map_create_texture(renderer, "img/objectif.png");	
-
-	map_init_rect(m->wall_position);
-	map_init_rect(m->objective_position);	
-
-	if(SDL_QueryTexture(m->wall_block,NULL,NULL, &m->wall_position.w, &m->wall_position.h) != 0)
-	{
-		fprintf(stderr, "Impossible de charger la texture\n");
-	}
-	if(SDL_QueryTexture(m->objective_block,NULL,NULL, &m->objective_position.w, &m->objective_position.h) != 0)
-	{
-		fprintf(stderr, "Impossible de charger la texture\n");
-	}
-
-	int size = str_len("level1.txt");
-	m->name_map = tools_malloc(sizeof(char) * size);
-	str_copy(m->name_map,"level1.txt"); 
-	
-	map_read_level(m);	
-	
-	m->nb_block = NB_BLOCK_W * NB_BLOCK_H; 
-
-	number_of_box(m);
-	init_box(renderer, m);	
-
-	box_pos_init(m);
-
-	return m;
+	//destroy grid
+	free(grid);
 }
-
-void map_destroy(map m)
+//texture
+Map_texture* map_texture_init(SDL_Renderer* renderer)
 {
-	int i;
+	Map_texture* map_texture = malloc(sizeof(Map_texture));
 
-	SDL_DestroyTexture(m->wall_block);
-	SDL_DestroyTexture(m->objective_block);
+	//init texture
+	map_texture->wall_texture = create_texture(renderer, WALL);
+	map_texture->box_texture = create_texture(renderer, BOX);
+	map_texture->objective_texture = create_texture(renderer, OBJECTIVE);
+	map_texture->complete_texture = create_texture(renderer, COMPLETE_OBJECTIVE);
 
-	for(i = 0; i < NB_BLOCK_W; i++)
-		tools_free(m->block[i], (sizeof(int) * NB_BLOCK_H));
-	tools_free(m->block, (sizeof(int*) * NB_BLOCK_W));
+	//init pos
+	map_texture->pos_texture.x = 0;
+	map_texture->pos_texture.y = 0;
+	map_texture->pos_texture.w = SIZE_BLOCK_W;	
+	map_texture->pos_texture.h = SIZE_BLOCK_H;
 
-	int size = str_len("level1.txt");
-	tools_free(m->name_map, sizeof(char) * size);
+	//Init value texture
+	SDL_QueryTexture(map_texture->wall_texture, NULL, NULL, &map_texture->pos_texture.w, &map_texture->pos_texture.h);
+	SDL_QueryTexture(map_texture->box_texture, NULL, NULL, &map_texture->pos_texture.w, &map_texture->pos_texture.h);
+	SDL_QueryTexture(map_texture->objective_texture, NULL, NULL, &map_texture->pos_texture.w, &map_texture->pos_texture.h);
+	SDL_QueryTexture(map_texture->complete_texture, NULL, NULL, &map_texture->pos_texture.w, &map_texture->pos_texture.h);
 
-	for(i = 0; i < m->nb_box; i++)
-		box_destroy(m->tab_box[i]);
-	tools_free(m->tab_box, sizeof(box) * m->nb_box);
-
-	tools_free(m, sizeof(struct _map));
+	return map_texture;
 }
 
-void map_create(SDL_Renderer* renderer, map m)
-{	
-	map_set_block(renderer, m);
-
-}
-
-
-void debug(map m)
+void map_texture_destroy(Map_texture* map_texture)
 {
-	int y, x;
+	if(map_texture == NULL)
+		return;
 
-	for(y = 0; y < NB_BLOCK_W; y++)
-	{
-		for(x = 0; x < NB_BLOCK_H; x++)
-			fprintf(stderr, "%d", m->block[y][x]);
+	//destroy texture
+	SDL_DestroyTexture(map_texture->wall_texture);
+	SDL_DestroyTexture(map_texture->box_texture);
+	SDL_DestroyTexture(map_texture->objective_texture);
 
-		fprintf(stderr, "\n");
-	}
+	//destroy struct map_texture
+	free(map_texture);
 }
 
-
-void map_read_level(map m)
+//debug
+void grid_debug(Grid* grid)
 {
-	int c;
-	int x = 0, y = 0;
-	FILE *level = fopen(m->name_map, "r");
-	if(level == NULL)
-		fprintf(stderr, "Impossible d'ouvrir le fichier %s\n", m->name_map);
-
-
-	for(y = 0; y < NB_BLOCK_W; y ++)
+	int x = 0;
+	for(int i = 0; i < grid->size_tab_2d; i++)
 	{
-		for(x = 0; x < NB_BLOCK_H; x ++)
+		//loop for display array
+		if(x == grid->width)
 		{
-			c = fgetc(level);
-			if(c != 10)
-			{
-			int value = char_to_int(c);
-			m->block[y][x] = value;
-			}	
+			//check id end line
+			fprintf(stderr, "\n");
+			x = 0;
 		}
-		c = fgetc(level);
+
+		//right value
+		fprintf(stderr, "%d", grid->tab_2d[i]);
+		x++;
+
+	}
+	fprintf(stderr, "\n\n");
+}
+
+
+void map_texture_debug(SDL_Renderer* renderer, Map_texture* map_texure)
+{
+	SDL_RenderCopy(renderer, map_texure->wall_texture, NULL, &map_texure->pos_texture);
+	map_texure->pos_texture.x += 32;
+	SDL_RenderCopy(renderer, map_texure->box_texture, NULL, &map_texure->pos_texture);
+	map_texure->pos_texture.x += 32;
+	SDL_RenderCopy(renderer, map_texure->objective_texture, NULL, &map_texure->pos_texture);
+	map_texure->pos_texture.x = 0;
+}
+
+//converted
+int tab_converted_x_y_to_index(int x, int y, int size_x) 
+{
+	int index = 0;
+
+	index = size_x * y + x;
+
+	return index;
+}
+
+void grid_set_value(Grid* grid, int index, int value)
+{
+	//Error
+	if(grid == NULL)
+		return;
+	if((index < 0) || ( index >= grid->size_tab_2d))
+	{
+		fprintf(stderr, "ERROR <grid_set_value> : index invalide\n");
+	       return;	
 	}
 
- 	
-
-
-	if(fclose(level) == EOF)
-		fprintf(stderr, "Impossible de fermer le fichier %s\n", m->name_map);
+	grid->tab_2d[index] = value; 
 
 }
 
-void map_set_block(SDL_Renderer* renderer, map m)
+void grid_set_value_x_y(Grid* grid, int index_x, int index_y, int value)
 {
-	int x, y;
-	
-	for(y = 0; y < NB_BLOCK_W; y ++)
+	//Error
+	if(grid == NULL)
+		return;
+	if((index_x < 0) || (index_x >= grid->width) || (index_y < 0) || (index_y >= grid->height))
 	{
-		for(x = 0; x < NB_BLOCK_H; x ++)
-		{	
-			m->wall_position.x = x * SIZE_BLOCK_H;
-			m->wall_position.y = y * SIZE_BLOCK_W;
-			m->objective_position.x = x * SIZE_BLOCK_H;
-			m->objective_position.y = y * SIZE_BLOCK_W;
+		fprintf(stderr, "ERROR <grid_set_value_x_y> : index invalide\n");
+		return;
+	}
 
+	grid_set_value(grid, tab_converted_x_y_to_index(index_x, index_y, grid->width), value);
 
-			switch(m->block[y][x])
+}
+
+int grid_get_value(Grid* grid, int index)
+{
+	//Error
+	if(grid == NULL)
+		return -3;
+	if((index < 0) || ( index >= grid->size_tab_2d))
+	{
+		fprintf(stderr, "ERROR <grid_get_value> : index invalide\n");
+	       return -3;	
+	}
+
+	return grid->tab_2d[index];
+
+}
+int grid_get_value_x_y(Grid* grid, int index_x, int index_y)
+{
+	//Error
+	if(grid == NULL)
+		return -3;
+	if((index_x < 0) || (index_x >= grid->width) || (index_y < 0) || (index_y >= grid->height))
+	{
+		fprintf(stderr, "ERROR <grid_get_value_x_y> : index invalide\n");
+		return -3;
+	}
+
+	return grid_get_value(grid, tab_converted_x_y_to_index(index_x, index_y, grid->width));
+}
+
+//return index of value
+int search_value(Grid* grid, int value)
+{
+	for(int i = 0; i < grid->size_tab_2d; i++)
+	{
+		if(grid->tab_2d[i] == value)
+			return i;
+	}
+
+	return -3;
+}
+
+void search_value_x_y(Grid* grid, int*	index_x, int* index_y, int value)
+{
+	*index_x = -3;
+	*index_y = -3;
+
+	for(int i = 0; i < grid->height; i++)
+	{
+		for(int j = 0; j < grid->width; j++)
+		{
+			if(grid->tab_2d[tab_converted_x_y_to_index(j, i, grid->width)] == value )
 			{
-				case 1:
-					SDL_RenderCopy(renderer, m->wall_block, NULL, &m->wall_position);
-					break;
-
-				case 3:
-					SDL_RenderCopy(renderer, m->objective_block, NULL, &m->objective_position);
-					break;
-
-			}	
-		}	
-	}
-
-	int i;
-	for(i = 0; i < m->nb_box; i++)
-	{
-		box_display(renderer, m->tab_box[i]);
+				*index_x = j;
+				*index_y = i;
+			}
+		}
 	}
 
 }
 
 
-
-void block_display(SDL_Renderer* renderer, map m)
+//manage file level
+void read_level(Grid* grid, const char* name_level)
 {
-	SDL_RenderCopy(renderer, m->wall_block, NULL, &m->wall_position);
-}
+	//start number objective is 0
+	grid->nb_objective = 0;
 
-
-SDL_Texture* map_create_texture(SDL_Renderer* renderer, char* name_img)
-{
-	SDL_Surface* img = IMG_Load(name_img);
-	if(img == NULL)
-		fprintf(stderr,"Impossible de charger l'image %s\n", name_img);
-	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, img);
-	SDL_FreeSurface(img);
-	if(texture == NULL)
-		fprintf(stderr, "Impossible de creer la texture\n");
-
-	return texture;
-}
-
-SDL_Rect map_init_rect(SDL_Rect rect)
-{
-	rect.x = 0;
-	rect.y = 0;
-	rect.w = 34;
-	rect.h = 34;
-
-	return rect;
-}
-
-
-void box_pos_init(map m)
-{
-	int x, y;
-	int i = 0;
-
-	for(y = 0; y < NB_BLOCK_W; y ++)
+	//open file 
+	FILE* level = fopen(name_level, "r");
+	if(level == NULL)
 	{
-		for(x = 0; x < NB_BLOCK_H; x ++)
-		{	
-			if(m->block[y][x] == 2)
+		fprintf(stderr, "ERROR <read_level> : Impossible de lire le fichier -> %s\n", name_level);
+		return;
+	}
+
+	//loop for read file
+	for(int i = 0;i < grid->size_tab_2d; i++)
+	{
+		int value = fgetc(level);
+		if(value == '\n')
+			value = fgetc(level);
+
+		//count the number of objective
+		if(char_to_int(value) == OBJECTIVE_BLOCK )
+			grid->nb_objective ++;
+
+		grid->tab_2d[i] = char_to_int(value); 
+	}	
+
+	fclose(level);
+
+}
+
+//display
+void display_map(SDL_Renderer* renderer, Grid* grid, Map_texture* map_texture)
+{
+	for(int y = 0; y < grid->height; y++)
+	{	
+
+		for(int x = 0; x < grid->width; x++)
+		{
+			map_texture->pos_texture.x = x * SIZE_BLOCK_W;
+			map_texture->pos_texture.y = y * SIZE_BLOCK_H;
+
+			int value = tab_converted_x_y_to_index(x, y, grid->width);
+
+			switch(grid->tab_2d[value])
 			{
-				
-				m->tab_box[i]->position.x = x * SIZE_BLOCK_H;
-				m->tab_box[i]->position.y = y * SIZE_BLOCK_W;
-				i ++;
+				case WALL_BLOCK:
+					SDL_RenderCopy(renderer,map_texture->wall_texture, NULL, &map_texture->pos_texture);
+					break;
+				case BOX_BLOCK:
+					SDL_RenderCopy(renderer,map_texture->box_texture, NULL, &map_texture->pos_texture);
+					break;
+				case OBJECTIVE_BLOCK:
+					SDL_RenderCopy(renderer,map_texture->objective_texture, NULL, &map_texture->pos_texture);
+					break;
+				case COMPLETE_BLOCK:
+					SDL_RenderCopy(renderer, map_texture->complete_texture, NULL, &map_texture->pos_texture);
+				       break;	
 			}
 
-
-		}	
+		}
+		
+		
 	}
 }
-
-void number_of_box(map m)
-{
-	int result = 0;
-	int x, y;
-	
-	for(y = 0; y < NB_BLOCK_W; y ++)
-	{
-		for(x = 0; x < NB_BLOCK_H; x ++)
-		{	
-			if(m->block[y][x] == 2)
-			{
-				result ++; 
-			}
-
-
-		}	
-	}
-
-
-	m->nb_box = result;
-}
-
-
-void init_box(SDL_Renderer* renderer, map m)
-{
-	int i;
-	m->tab_box = tools_malloc(sizeof(box) * m->nb_box);
-
-	for(i = 0; i < m->nb_box; i++)
-		m->tab_box[i] = box_create(renderer);
-
-}
-
-
-
